@@ -10,38 +10,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# 1. Vectorise the sales response csv data
+# 1. Vectorize the sales response csv data
 file_path = "sales_response.csv"
 
-# Check if the file exists
-if os.path.exists(file_path):
-    # Check if the file is empty
-    if os.path.getsize(file_path) > 0:
-        # Load data if file is not empty
-        loader = CSVLoader(file_path=file_path)
-        documents = loader.load()
-    else:
-        # If file is empty, send empty data
-        documents = []
+if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+    loader = CSVLoader(file_path=file_path)
+    documents = loader.load()
 else:
-    # If file doesn't exist, send empty data
     documents = []
 
 embeddings = OpenAIEmbeddings()
 db = FAISS.from_documents(documents, embeddings)
 
 # 2. Function for similarity search
-
-
 def retrieve_info(query):
     similar_response = db.similarity_search(query, k=3)
-
     page_contents_array = [doc.page_content for doc in similar_response]
-
-    # print(page_contents_array)
-
     return page_contents_array
-
 
 # 3. Setup LLMChain & prompts
 llm = ChatOpenAI(temperature=0, model="gpt-4o")
@@ -49,18 +34,18 @@ llm = ChatOpenAI(temperature=0, model="gpt-4o")
 template = """
 You are a world class business development representative of our CPQ Application. 
 I will share a prospect's message with you and you will give me the best answer that 
-I should send to this prospect based on past best practies, 
+I should send to this prospect based on past best practices, 
 and you will follow ALL of the rules below:
 
-1/ Response should be very similar or even identical to the past best practies, 
-in terms of length, ton of voice, logical arguments and other details
+1/ Response should be very similar or even identical to the past best practices, 
+in terms of length, tone of voice, logical arguments and other details
 
-2/ If the best practice are irrelevant, then try to mimic the style of the best practice to prospect's message
+2/ If the best practices are irrelevant, then try to mimic the style of the best practice to the prospect's message
 
 Below is a message I received from the prospect:
 {message}
 
-Here is a list of best practies of how we normally respond to prospect in similar scenarios:
+Here is a list of best practices of how we normally respond to prospects in similar scenarios:
 {best_practice}
 
 Please write the best response that I should send to this prospect:
@@ -76,29 +61,37 @@ prompt = PromptTemplate(
 
 chain = LLMChain(llm=llm, prompt=prompt)
 
-
 # 4. Retrieval augmented generation
 def generate_response(message):
     best_practice = retrieve_info(message)
     response = chain.run(message=message, best_practice=best_practice)
     return response
 
-
-# 5. Build an app with streamlit
+# 5. Build an app with Streamlit
 def main():
-    st.set_page_config(
-        page_title="Customer response generator", page_icon=":bird:")
+    st.set_page_config(page_title="Customer response generator", page_icon=":bird:")
 
     st.header("Customer response generator :bird:")
-    message = st.text_area("customer message")
+    
+    # Option to input message or upload a file
+    upload_option = st.radio("Choose input method:", ("Text Input", "Upload File"))
+    
+    if upload_option == "Text Input":
+        message = st.text_area("customer message")
+    else:
+        uploaded_file = st.file_uploader("Choose a file", type=["log"])
+        if uploaded_file is not None:
+            message = uploaded_file.read().decode("utf-8")
+        else:
+            message = ""
 
-    if message:
-        st.write("Generating best practice message...")
-
-        result = generate_response(message)
-
-        st.info(result)
-
+    if st.button("Send"):
+        if message:
+            st.write("Generating best practice message...")
+            result = generate_response(message)
+            st.info(result)
+        else:
+            st.warning("Please enter a message or upload a file before sending.")
 
 if __name__ == '__main__':
     main()
