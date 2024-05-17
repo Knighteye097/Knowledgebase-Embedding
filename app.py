@@ -32,6 +32,7 @@ def retrieve_info(query):
 llm = ChatOpenAI(temperature=0, model="gpt-4o")
 
 template = """
+Your name is CPQ BotSensei.
 You are a world class business development representative of our CPQ Application. 
 I will share a prospect's message with you and you will give me the best answer that 
 I should send to this prospect based on past best practices, 
@@ -50,8 +51,7 @@ Here is a list of best practices of how we normally respond to prospects in simi
 
 Please write the best response that I should send to this prospect:
 
-At the end just add "Best Regards, CPQ". Please make sure CPQ should be written in a new line
-below Best Regards, no need to write Best Regards, [YOUR_NAME]
+Please note at all cost, no where in the response you will write [YOUR_NAME], instead you will write CPQ BotSensei.
 """
 
 prompt = PromptTemplate(
@@ -69,9 +69,9 @@ def generate_response(message):
 
 # 5. Build an app with Streamlit
 def main():
-    st.set_page_config(page_title="Customer response generator", page_icon=":bird:")
+    st.set_page_config(page_title="CPQ BotSensei", page_icon=":male-scientist:")
 
-    st.header("Customer response generator :bird:")
+    st.header("CPQ BotSensei :male-scientist:")
     
     # Option to input message or upload a file
     upload_option = st.radio("Choose input method:", ("Text Input", "Upload File"))
