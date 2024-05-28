@@ -1,6 +1,6 @@
 import os
 import streamlit as st
-from langchain.document_loaders.csv_loader import CSVLoader
+from langchain_community.document_loaders import Docx2txtLoader
 from langchain.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.prompts import PromptTemplate
@@ -10,14 +10,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# 1. Vectorize the sales response csv data
-file_path = "sales_response.csv"
+# 1. Vectorize the Word Document Data
+file_paths = ["Hackathon Spec Cleanup Data.docx", "PowerIndex Data.docx", "Software Options Data.docx", "Spec Performance Data.docx"]
 
-if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-    loader = CSVLoader(file_path=file_path)
-    documents = loader.load()
-else:
-    documents = []
+documents = []
+for file_path in file_paths:
+    if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+        loader = Docx2txtLoader(file_path=file_path)
+        documents.extend(loader.load())
 
 embeddings = OpenAIEmbeddings()
 db = FAISS.from_documents(documents, embeddings)
