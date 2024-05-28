@@ -6,3 +6,4 @@ langchain
 langchain-community
 faiss-cpu
 tiktoken
+docx2txt
